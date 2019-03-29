@@ -133,7 +133,9 @@ public class Author extends TableImpl<Record> {
 	/**
 	 * Rename this table
 	 */
+	@Override
 	public Author rename(String name) {
 		return new Author(name, null);
 	}
+
 }
