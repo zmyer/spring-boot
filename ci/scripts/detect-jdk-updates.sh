@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 case "$JDK_VERSION" in
 	java8)
@@ -10,9 +9,9 @@ case "$JDK_VERSION" in
 		 BASE_URL="https://api.adoptopenjdk.net/v2/info/releases/openjdk11"
 		 ISSUE_TITLE="Upgrade Java 11 version in CI image"
 	;;
-	java12)
-		 BASE_URL="https://api.adoptopenjdk.net/v2/info/releases/openjdk12"
-		 ISSUE_TITLE="Upgrade Java 12 version in CI image"
+	java13)
+		 BASE_URL="https://api.adoptopenjdk.net/v2/info/releases/openjdk13"
+		 ISSUE_TITLE="Upgrade Java 13 version in CI image"
 	;;
 	*)
 		echo $"Unknown java version"
@@ -30,7 +29,7 @@ if [[ $current = $latest ]]; then
 fi
 
 existing_tasks=$( curl -s https://api.github.com/repos/${GITHUB_ORGANIZATION}/${GITHUB_REPO}/issues\?labels\=type:%20task\&state\=open\&creator\=spring-buildmaster )
-existing_jdk_issues=$( echo "$existing_tasks" | jq -c --arg TITLE $ISSUE_TITLE '.[] | select(.title==$TITLE)' )
+existing_jdk_issues=$( echo "$existing_tasks" | jq -c --arg TITLE "$ISSUE_TITLE" '.[] | select(.title==$TITLE)' )
 
 if [[ ${existing_jdk_issues} = "" ]]; then
 	curl \

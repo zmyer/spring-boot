@@ -71,24 +71,30 @@ class BootArchiveSupport {
 
 	private boolean excludeDevtools = true;
 
-	BootArchiveSupport(String loaderMainClass,
-			Function<FileCopyDetails, ZipCompression> compressionResolver) {
+	BootArchiveSupport(String loaderMainClass, Function<FileCopyDetails, ZipCompression> compressionResolver) {
 		this.loaderMainClass = loaderMainClass;
 		this.compressionResolver = compressionResolver;
 		this.requiresUnpack.include(Specs.satisfyNone());
 		configureExclusions();
 	}
 
-	void configureManifest(Jar jar, String mainClassName) {
+	void configureManifest(Jar jar, String mainClassName, String springBootClasses, String springBootLib) {
 		Attributes attributes = jar.getManifest().getAttributes();
 		attributes.putIfAbsent("Main-Class", this.loaderMainClass);
 		attributes.putIfAbsent("Start-Class", mainClassName);
+		attributes.computeIfAbsent("Spring-Boot-Version", (key) -> determineSpringBootVersion());
+		attributes.putIfAbsent("Spring-Boot-Classes", springBootClasses);
+		attributes.putIfAbsent("Spring-Boot-Lib", springBootLib);
+	}
+
+	private String determineSpringBootVersion() {
+		String implementationVersion = getClass().getPackage().getImplementationVersion();
+		return (implementationVersion != null) ? implementationVersion : "unknown";
 	}
 
 	CopyAction createCopyAction(Jar jar) {
-		CopyAction copyAction = new BootZipCopyAction(jar.getArchivePath(),
-				jar.isPreserveFileTimestamps(), isUsingDefaultLoader(jar),
-				this.requiresUnpack.getAsSpec(), this.exclusions.getAsExcludeSpec(),
+		CopyAction copyAction = new BootZipCopyAction(jar.getArchivePath(), jar.isPreserveFileTimestamps(),
+				isUsingDefaultLoader(jar), this.requiresUnpack.getAsSpec(), this.exclusions.getAsExcludeSpec(),
 				this.launchScript, this.compressionResolver, jar.getMetadataCharset());
 		if (!jar.isReproducibleFileOrder()) {
 			return copyAction;
@@ -97,8 +103,7 @@ class BootArchiveSupport {
 	}
 
 	private boolean isUsingDefaultLoader(Jar jar) {
-		return DEFAULT_LAUNCHER_CLASSES
-				.contains(jar.getManifest().getAttributes().get("Main-Class"));
+		return DEFAULT_LAUNCHER_CLASSES.contains(jar.getManifest().getAttributes().get("Main-Class"));
 	}
 
 	LaunchScriptConfiguration getLaunchScript() {
@@ -138,8 +143,8 @@ class BootArchiveSupport {
 	}
 
 	private boolean isZip(InputStream inputStream) throws IOException {
-		for (int i = 0; i < ZIP_FILE_HEADER.length; i++) {
-			if (inputStream.read() != ZIP_FILE_HEADER[i]) {
+		for (byte headerByte : ZIP_FILE_HEADER) {
+			if (inputStream.read() != headerByte) {
 				return false;
 			}
 		}
@@ -166,8 +171,7 @@ class BootArchiveSupport {
 		public WorkResult execute(CopyActionProcessingStream stream) {
 			return this.delegate.execute((action) -> {
 				Map<RelativePath, FileCopyDetailsInternal> detailsByPath = new TreeMap<>();
-				stream.process((details) -> detailsByPath.put(details.getRelativePath(),
-						details));
+				stream.process((details) -> detailsByPath.put(details.getRelativePath(), details));
 				detailsByPath.values().forEach(action::processFile);
 			});
 		}

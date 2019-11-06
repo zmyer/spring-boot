@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import org.springframework.boot.actuate.metrics.export.prometheus.PrometheusPush
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@link ConfigurationProperties} for configuring metrics export to Prometheus.
+ * {@link ConfigurationProperties @ConfigurationProperties} for configuring metrics export
+ * to Prometheus.
  *
  * @author Jon Schneider
  * @author Stephane Nicoll
@@ -83,7 +84,7 @@ public class PrometheusProperties {
 		/**
 		 * Base URL for the Pushgateway.
 		 */
-		private String baseUrl = "localhost:9091";
+		private String baseUrl = "http://localhost:9091";
 
 		/**
 		 * Frequency with which to push metrics.
